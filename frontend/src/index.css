@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', sans-serif;
+  }
+
+  body {
+    @apply bg-future-bg dark:bg-gh-bg text-slate-900 dark:text-gh-text transition-colors duration-300;
+    background-image: theme('backgroundImage.future-radial'), theme('backgroundImage.future-grid');
+    background-size: cover, 160px 160px;
+    background-attachment: fixed;
+    color: theme('colors.slate.900');
+  }
+
+  .dark body {
+    background-image: none;
+    color: theme('colors.gh-text');
+  }
+
+  /* Ensure all text elements are readable in dark mode */
+  h1, h2, h3, h4, h5, h6 {
+    @apply dark:text-gh-text;
+  }
+
+  p, span, label, li, a {
+    @apply dark:text-gh-text;
+  }
+
+  /* Override gray text to be lighter in dark mode */
+  .text-gray-600 {
+    @apply dark:text-gh-text-secondary;
+  }
+
+  .text-gray-700 {
+    @apply dark:text-gh-text;
+  }
+
+  .text-gray-500 {
+    @apply dark:text-gh-text-tertiary;
+  }
+
+  .text-gray-400 {
+    @apply dark:text-gh-text-secondary;
+  }
+
+  .text-gray-300 {
+    @apply dark:text-gh-text-secondary;
+  }
+
+  .text-gray-900 {
+    @apply dark:text-gh-text;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gh-bg backdrop-blur-xs;
+  }
+
+  .btn::after {
+    content: "";
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 65%);
+  }
+
+  .btn:hover::after {
+    @apply opacity-100;
+  }
+
+  .btn-primary {
+    @apply text-white hover:-translate-y-1 border border-primary-500/70 shadow-glow;
+    background: linear-gradient(135deg, theme('colors.primary.500'), theme('colors.primary.400'), theme('colors.primary.300'));
+    box-shadow: 0 32px 72px -24px rgba(16, 185, 129, 0.55);
+  }
+
+  .dark .btn-primary {
+    background: linear-gradient(135deg, theme('colors.primary.500'), theme('colors.primary.600'));
+    box-shadow: 0 32px 72px -24px rgba(16, 185, 129, 0.45);
+  }
+
+  .btn-secondary {
+    @apply bg-white text-primary-600 border border-primary-200 hover:-translate-y-1 hover:bg-primary-50 hover:border-primary-300 dark:bg-gh-bg-tertiary dark:text-gh-text dark:border-gh-border dark:hover:bg-gh-bg-hover;
+    box-shadow: 0 24px 48px -30px rgba(16, 185, 129, 0.45);
+  }
+
+  .btn-outline {
+    @apply bg-transparent border border-primary-300 text-primary-600 hover:-translate-y-1 hover:bg-primary-50/70 dark:text-gh-text dark:border-gh-border dark:hover:bg-gh-bg-secondary/60;
+  }
+
+  .btn-ghost {
+    @apply bg-white/15 border border-white/25 text-white hover:-translate-y-1 hover:bg-white/20;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-xl {
+    @apply px-7 py-4 text-base sm:text-lg;
+  }
+
+  .btn-compact {
+    @apply px-4 py-2 text-sm;
+  }
+
+  .input {
+    @apply w-full px-4 py-2.5 border border-future-border dark:border-gh-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-future-surface dark:bg-gh-bg-secondary text-slate-900 dark:text-gh-text placeholder-slate-400 dark:placeholder-gh-text-tertiary backdrop-blur-xs;
+  }
+
+  .card {
+    @apply relative bg-future-surface dark:bg-gh-bg-secondary rounded-2xl border border-future-border dark:border-gh-border shadow-halo dark:shadow-none backdrop-blur-xs overflow-hidden;
+  }
+
+  .card::before {
+    content: "";
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
+    background: linear-gradient(135deg, rgba(0, 211, 165, 0.15), rgba(168, 85, 247, 0.12));
+  }
+
+  .card:hover::before {
+    @apply opacity-100;
+  }
+
+  .section-divider {
+    @apply border-b border-future-border dark:border-gh-border;
+  }
+
+  .glass-panel {
+    @apply bg-future-surface backdrop-blur-xs border border-future-border rounded-3xl shadow-halo;
+  }
+}
