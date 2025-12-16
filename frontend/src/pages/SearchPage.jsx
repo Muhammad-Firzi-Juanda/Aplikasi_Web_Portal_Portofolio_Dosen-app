@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { Search, Filter } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { portfolioApi } from '../utils/api'
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [results, setResults] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -22,9 +23,23 @@ export default function SearchPage() {
     setIsLoading(true)
     
     try {
-      const response = await portfolioApi.get(`/api/search/portfolios?q=${encodeURIComponent(searchQuery)}`)
+      // Try Meilisearch first
+      try {
+        const response = await portfolioApi.get(`/api/search/portfolios?q=${encodeURIComponent(searchQuery)}`)
+        if (response.data.success) {
+          setResults(response.data.data.hits || [])
+          setIsLoading(false)
+          return
+        }
+      } catch (searchError) {
+        console.warn('Meilisearch failed, falling back to database search:', searchError)
+      }
+      
+      // Fallback to database search
+      const response = await portfolioApi.get(`/api/portfolios?search=${encodeURIComponent(searchQuery)}&status=published&isPublic=true`)
       if (response.data.success) {
-        setResults(response.data.data.hits || [])
+        const portfolios = response.data.data.portfolios || []
+        setResults(portfolios)
       } else {
         toast.error('Search failed. Please try again.')
         setResults([])
@@ -109,14 +124,28 @@ export default function SearchPage() {
       {results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {results.map((portfolio) => {
-            const ownerInitials = (portfolio.user?.firstName?.[0] || portfolio.user?.username?.[0] || '?')
+            const ownerInitials = (portfolio.user?.firstName?.[0] || portfolio.user?.username?.[0] || '?').toUpperCase()
+            
+            const handleOpenPortfolio = () => navigate(`/portfolio/${portfolio.id}`)
+            const handleOpenCreator = (event) => {
+              event.stopPropagation()
+              if (portfolio.user?.username) navigate(`/u/${portfolio.user.username}`)
+            }
+            
             return (
-              <Link key={portfolio.id} to={`/portfolio/${portfolio.id}`} className="card overflow-hidden hover:shadow-lg transition-shadow flex flex-col cursor-pointer">
+              <article
+                key={portfolio.id}
+                role="button"
+                tabIndex={0}
+                onClick={handleOpenPortfolio}
+                onKeyDown={(event) => event.key === 'Enter' && handleOpenPortfolio()}
+                className="card overflow-hidden hover:shadow-lg transition-all flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400"
+              >
                 {portfolio.thumbnail && (
                   <img 
                     src={portfolio.thumbnail} 
                     alt={portfolio.title}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-48 object-cover bg-gray-100 dark:bg-gh-bg-tertiary"
                   />
                 )}
                 <div className="p-6 flex-1 flex flex-col">
@@ -126,25 +155,34 @@ export default function SearchPage() {
                   {/* Owner Info */}
                   {portfolio.user && (
                     <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gh-border">
-                      <Link to={`/u/${portfolio.user.username}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                        {portfolio.user.avatar ? (
-                          <img
-                            src={portfolio.user.avatar}
-                            alt={portfolio.user.username}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200 flex items-center justify-center text-sm font-bold">
-                            {ownerInitials.toUpperCase()}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {portfolio.user.avatar ? (
+                            <img
+                              src={portfolio.user.avatar}
+                              alt={portfolio.user.username}
+                              className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                              {ownerInitials}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gh-text truncate">{portfolio.user.username}</p>
+                            <p className="text-xs text-gray-500 dark:text-gh-text-tertiary truncate">
+                              {portfolio.user.university || 'Universitas Futuristik'}
+                            </p>
                           </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gh-text truncate">{portfolio.user.username}</p>
-                          <p className="text-xs text-gray-500 dark:text-gh-text-tertiary truncate">
-                            {portfolio.user.university || 'Universitas Futuristik'}
-                          </p>
                         </div>
-                      </Link>
+                        <button
+                          type="button"
+                          onClick={handleOpenCreator}
+                          className="btn btn-secondary btn-compact whitespace-nowrap flex-shrink-0"
+                        >
+                          Profil
+                        </button>
+                      </div>
                     </div>
                   )}
                   
@@ -159,7 +197,7 @@ export default function SearchPage() {
                     ))}
                   </div>
                 </div>
-              </Link>
+              </article>
             )
           })}
         </div>

@@ -31,6 +31,15 @@ const userApi = axios.create({
   }
 })
 
+// Profile Service API (through gateway)
+const profileApi = axios.create({
+  baseURL: API_GATEWAY_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
 // Request interceptor untuk semua API
 const setupInterceptors = (api) => {
   api.interceptors.request.use(
@@ -68,5 +77,6 @@ const setupInterceptors = (api) => {
 setupInterceptors(authApi)
 setupInterceptors(portfolioApi)
 setupInterceptors(userApi)
+setupInterceptors(profileApi)
 
-export { authApi, portfolioApi, userApi }
+export { authApi, portfolioApi, userApi, profileApi }

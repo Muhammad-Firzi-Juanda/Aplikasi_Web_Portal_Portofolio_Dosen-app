@@ -28,7 +28,7 @@ export default function Navbar({ isDark, setIsDark }) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <span className="text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">📝</span>
+            <span className="text-2xl transition-transform duration-300 group-hover:-translate-y-0.5">🍀</span>
             <span className="font-bold text-xl text-slate-800 dark:text-gh-text tracking-wide">Portfolio</span>
           </Link>
 

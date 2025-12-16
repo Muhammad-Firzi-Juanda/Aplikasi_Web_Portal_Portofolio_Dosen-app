@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { MapPin, Globe, Mail, Phone, Eye, Heart } from 'lucide-react'
-import { userApi, portfolioApi } from '../utils/api'
+import { userApi, portfolioApi, profileApi } from '../utils/api'
 
 export default function PublicProfilePage() {
   const { username } = useParams()
@@ -26,6 +26,13 @@ export default function PublicProfilePage() {
             views: userData.views || 0,
             createdAt: userData.createdAt
           })
+          
+          // Increment profile view count
+          try {
+            await profileApi.post(`/api/profiles/${userData.id}/view`)
+          } catch (error) {
+            console.log('View increment failed (expected for guests):', error.message)
+          }
           
           // Fetch user's public portfolios
           try {

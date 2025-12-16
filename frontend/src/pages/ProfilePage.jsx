@@ -86,6 +86,17 @@ export default function ProfilePage() {
   const handleChangePassword = async (e) => {
     e.preventDefault()
     
+    // Validation
+    if (!passwordData.currentPassword) {
+      toast.error('Current password is required')
+      return
+    }
+
+    if (!passwordData.newPassword) {
+      toast.error('New password is required')
+      return
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('New passwords do not match')
       return
@@ -93,6 +104,11 @@ export default function ProfilePage() {
 
     if (passwordData.newPassword.length < 6) {
       toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      toast.error('New password must be different from current password')
       return
     }
 
@@ -118,7 +134,8 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Password change error:', error)
-      toast.error(error.response?.data?.message || 'Failed to change password')
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to change password'
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -435,7 +452,7 @@ export default function ProfilePage() {
           </div>
 
           {showPasswordForm && (
-            <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gh-text mb-2">
                   Current Password
@@ -480,7 +497,8 @@ export default function ProfilePage() {
 
               <div className="flex gap-3">
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleChangePassword}
                   disabled={isLoading}
                   className="btn btn-primary btn-compact disabled:opacity-50"
                 >
@@ -497,7 +515,7 @@ export default function ProfilePage() {
                   Cancel
                 </button>
               </div>
-            </form>
+            </div>
           )}
         </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Calendar, Eye } from 'lucide-react'
 import { useQuery } from 'react-query'
 import { portfolioApi } from '../utils/api'
@@ -7,12 +7,13 @@ import { portfolioApi } from '../utils/api'
 export default function AllPortfoliosPage() {
   const [page, setPage] = useState(1)
   const limit = 12
+  const navigate = useNavigate()
 
-  // Fetch all portfolios
+  // Fetch all portfolios (published and public)
   const { data: portfoliosData, isLoading } = useQuery(
     ['allPortfolios', page],
     async () => {
-      const response = await portfolioApi.get(`/api/portfolios?page=${page}&limit=${limit}&status=published`)
+      const response = await portfolioApi.get(`/api/portfolios?page=${page}&limit=${limit}&status=published&isPublic=true`)
       return response.data.data
     },
     { staleTime: 5 * 60 * 1000 } // 5 minutes
@@ -52,51 +53,74 @@ export default function AllPortfoliosPage() {
       {/* Portfolios Grid */}
       {!isLoading && portfolios.length > 0 && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {portfolios.map((portfolio) => {
-              const ownerInitials = (portfolio.user?.firstName?.[0] || portfolio.user?.username?.[0] || '?')
+              const ownerInitials = (portfolio.user?.firstName?.[0] || portfolio.user?.username?.[0] || '?').toUpperCase()
+
+              const handleOpenPortfolio = () => navigate(`/portfolio/${portfolio.id}`)
+              const handleOpenCreator = (event) => {
+                event.stopPropagation()
+                if (portfolio.user?.username) navigate(`/u/${portfolio.user.username}`)
+              }
+
               return (
-                <div key={portfolio.id} className="card overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+                <article
+                  key={portfolio.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={handleOpenPortfolio}
+                  onKeyDown={(event) => event.key === 'Enter' && handleOpenPortfolio()}
+                  className="card overflow-hidden hover:shadow-lg transition-all flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400"
+                >
                   {portfolio.thumbnail && (
                     <img
                       src={portfolio.thumbnail}
                       alt={portfolio.title}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-contain bg-gray-100 dark:bg-gh-bg-tertiary"
                     />
                   )}
                   <div className="p-6 flex-1 flex flex-col">
-                    <Link to={`/portfolio/${portfolio.id}`} className="hover:text-primary-600 dark:hover:text-gh-accent">
-                      <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gh-text">{portfolio.title}</h3>
-                    </Link>
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gh-text line-clamp-2 hover:text-primary-600 dark:hover:text-gh-accent">
+                      {portfolio.title}
+                    </h3>
                     <p className="text-gray-600 dark:text-gh-text-secondary mb-4 line-clamp-2 flex-1">{portfolio.description}</p>
 
                     {/* Owner Info */}
                     {portfolio.user && (
                       <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gh-border">
-                        <Link to={`/u/${portfolio.user.username}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                          {portfolio.user.avatar ? (
-                            <img
-                              src={portfolio.user.avatar}
-                              alt={portfolio.user.username}
-                              className="h-10 w-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200 flex items-center justify-center text-sm font-bold">
-                              {ownerInitials.toUpperCase()}
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {portfolio.user.avatar ? (
+                              <img
+                                src={portfolio.user.avatar}
+                                alt={portfolio.user.username}
+                                className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                {ownerInitials}
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-gh-text truncate">{portfolio.user.username}</p>
+                              <p className="text-xs text-gray-500 dark:text-gh-text-tertiary truncate">
+                                {portfolio.user.university || 'Universitas Futuristik'}
+                              </p>
                             </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-gh-text truncate">{portfolio.user.username}</p>
-                            <p className="text-xs text-gray-500 dark:text-gh-text-tertiary truncate">
-                              {portfolio.user.university || 'Universitas Futuristik'}
-                            </p>
                           </div>
-                        </Link>
+                          <button
+                            type="button"
+                            onClick={handleOpenCreator}
+                            className="btn btn-secondary btn-compact whitespace-nowrap flex-shrink-0"
+                          >
+                            Profil
+                          </button>
+                        </div>
                       </div>
                     )}
 
                     {/* Meta Info */}
-                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gh-text-tertiary">
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gh-text-tertiary mb-4">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         {new Date(portfolio.createdAt).toLocaleDateString()}
@@ -109,7 +133,7 @@ export default function AllPortfoliosPage() {
 
                     {/* Tags */}
                     {portfolio.tags && portfolio.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="flex flex-wrap gap-2">
                         {portfolio.tags.slice(0, 3).map((tag) => (
                           <span
                             key={tag}
@@ -121,7 +145,7 @@ export default function AllPortfoliosPage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </article>
               )
             })}
           </div>

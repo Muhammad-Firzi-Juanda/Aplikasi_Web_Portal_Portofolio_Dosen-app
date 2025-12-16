@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Eye, Heart, ExternalLink, Github, Calendar, User } from 'lucide-react'
+import { Eye, Heart, ExternalLink, Github, Calendar, User, ArrowRight } from 'lucide-react'
 import { portfolioApi } from '../utils/api'
 import { useAuthStore } from '../stores/authStore'
 import toast from 'react-hot-toast'
@@ -215,6 +215,43 @@ export default function PortfolioDetailPage() {
           ))}
         </div>
       </div>
+
+      {/* Creator Info */}
+      {portfolio.user && (
+        <div className="card p-6 mb-8 bg-gradient-to-r from-primary-50 to-primary-100/50 dark:from-gh-bg-secondary dark:to-gh-bg-tertiary border border-primary-200/50 dark:border-gh-border">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {portfolio.user.avatar ? (
+                <img
+                  src={portfolio.user.avatar}
+                  alt={portfolio.user.username}
+                  className="h-16 w-16 rounded-full object-cover border-2 border-primary-300 dark:border-gh-border"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-200 flex items-center justify-center text-xl font-bold border-2 border-primary-300 dark:border-gh-border">
+                  {(portfolio.user.firstName?.[0] || portfolio.user.username?.[0] || '?').toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gh-text-secondary">Created by</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gh-text">
+                  {portfolio.user.fullName || portfolio.user.username}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gh-text-secondary">
+                  {portfolio.user.university || 'Universitas Futuristik'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate(`/u/${portfolio.user.username}`)}
+              className="btn btn-primary flex items-center gap-2 whitespace-nowrap"
+            >
+              View Profile
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Thumbnail */}
       {portfolio.thumbnail && (
